@@ -6,12 +6,42 @@ fn.devtool = {
         console.log('DevTool ' + (this.isOpen ? '열림' : '닫힘'));
         
 
-        fn.component.create({
+        var popup = fn.component.create({
             name: 'popup',
-            tagName: 'div',
+            title: 'DevTool',
+            parent: document.body,
+        });
+        var menu = fn.component.create({
+            name: 'menu',
+            datas: [
+                { name: 'Memo', action: function() {
+                    fn.component.create({
+                        name: 'popup',
+                        title: 'Memo',
+                        parent: document.body,
+                    });
+                } },
+                { name: 'Bookmark', action: function() {
+                    fn.component.create({
+                        name: 'popup',
+                        title: 'Bookmark',
+                        parent: document.body,
+                    });
+                } },
+                { name: 'Menu 3', action: function() { console.log('Menu 3 clicked'); } },
+            ],
+            parent: popup.content,
+        });
+        var table = fn.component.create({
+            name: 'table',
+            parent: popup.content,
+        });
+        var list = fn.component.create({
+            name: 'list',
+            parent: popup.content,
         });
 
-        console.log(el);
+        console.log(popup);
     }
 };
 
