@@ -5,7 +5,10 @@
     fn.localStorage = {};
     fn.data = {};
     fn.element = {};
+    fn.function = {};
+    fn.function.position = {};
     fn.component = {};
+    fn.component.data = {};
     fn.component.layout = {};
     fn.component.layout.data = {};
     
@@ -75,12 +78,32 @@
         if (o.data) {
             el._data = o.data || {};
         }
+        if (o.caller) {
+            el._caller = o.caller;
+        }
         return el;
     };
+
+    fn.function.position.get = function(o) {
+        var rect = o.el.getBoundingClientRect();
+        return {
+            top: rect.top + window.scrollY,
+            left: rect.left + window.scrollX,
+            width: rect.width,
+            height: rect.height,
+        };
+    }
 
     fn.component.create = function(o) {
         var layout = this.layout.get(o);
         var el = layout(o);
+        
+        // 레이아웃별로 컴포넌트를 fn.component.data에 저장
+        if (!this.data[o.name]) {
+            this.data[o.name] = [];
+        }
+        this.data[o.name].push(el);
+        
         if (o.parent) {
             o.parent.appendChild(el);
         }
@@ -98,6 +121,18 @@
     fn.component.layout.set({
         name: 'popup',
         value: function(o) {
+            // 팝업 위치 계산
+            var top = 50;
+            var left = 50;
+            var offset = 30;
+            
+            if (o.caller) {
+                var callerTop = parseInt(o.caller.style.top) || 50;
+                var callerLeft = parseInt(o.caller.style.left) || 50;
+                top = callerTop + offset;
+                left = callerLeft + offset;
+            }
+            
             var popup = fn.element.create({
                 tagName: 'div',
                 attribute: {
@@ -105,8 +140,8 @@
                 },
                 style: {
                     position: 'fixed',
-                    top: '50px',
-                    left: '50px',
+                    top: top + 'px',
+                    left: left + 'px',
                     backgroundColor: 'rgba(255, 255, 255, 0.96)',
                     border: '1px solid #d7dce5',
                     borderRadius: '12px',
@@ -166,7 +201,7 @@
                 },
             });
 
-            var saveBtn = fn.element.create({
+            var btnSave = fn.element.create({
                 tagName: 'button',
                 attribute: {
                     type: 'button',
@@ -187,7 +222,7 @@
                 },
             });
 
-            var refreshBtn = fn.element.create({
+            var btnRefresh = fn.element.create({
                 tagName: 'button',
                 attribute: {
                     type: 'button',
@@ -208,7 +243,7 @@
                 },
             });
 
-            var closeBtn = fn.element.create({
+            var btnClose = fn.element.create({
                 tagName: 'button',
                 attribute: {
                     type: 'button',
@@ -229,14 +264,21 @@
                 },
                 event: {
                     click: function() {
+                        var popupArray = fn.component.data['popup'];
+                        if (popupArray) {
+                            var index = popupArray.indexOf(popup);
+                            if (index > -1) {
+                                popupArray.splice(index, 1);
+                            }
+                        }
                         popup.remove();
                     }
                 },
             });
 
-            actions.appendChild(saveBtn);
-            actions.appendChild(refreshBtn);
-            actions.appendChild(closeBtn);
+            actions.appendChild(btnSave);
+            actions.appendChild(btnRefresh);
+            actions.appendChild(btnClose);
             header.appendChild(title);
             header.appendChild(actions);
             popup.appendChild(header);
@@ -258,24 +300,24 @@
                 handle: header,
             });
             
+            popup.addEventListener('click', function(e) {
+                popup.parentElement.appendChild(popup);
+            }, true);
+            
             popup.header = header;
             popup.content = content;
             popup.title = title;
-            popup.actions = actions;
-            popup.saveBtn = saveBtn;
-            popup.refreshBtn = refreshBtn;
-            popup.closeBtn = closeBtn;
             return popup;
         }
     });
 
     fn.component.layout.set({
-        name: 'table',
+        name: 'form',
         value: function(o) {
             var el = fn.element.create({
                 tagName: 'table',
                 attribute: {
-                    class: '__table',
+                    class: '__form',
                 },
                 style: {
                     
