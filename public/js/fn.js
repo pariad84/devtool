@@ -320,9 +320,97 @@
                     class: '__form',
                 },
                 style: {
-                    
+                    width: '100%',
+                    borderCollapse: 'collapse',
                 },
             });
+
+            var columns = o.columns || [];
+            var data = o.data || {};
+
+            el._inputs = {};
+
+            columns.forEach(function(column) {
+                var row = fn.element.create({
+                    tagName: 'tr',
+                    attribute: {
+                        class: '__form-row',
+                    },
+                    parent: el,
+                });
+
+                fn.element.create({
+                    tagName: 'td',
+                    attribute: {
+                        class: '__form-label',
+                    },
+                    text: column.label || column.name,
+                    style: {
+                        padding: '6px 8px',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        color: '#374151',
+                        whiteSpace: 'nowrap',
+                        verticalAlign: 'middle',
+                    },
+                    parent: row,
+                });
+
+                var valueCell = fn.element.create({
+                    tagName: 'td',
+                    attribute: {
+                        class: '__form-value',
+                    },
+                    style: {
+                        padding: '6px 8px',
+                        width: '100%',
+                    },
+                    parent: row,
+                });
+
+                var input = fn.element.create({
+                    tagName: 'input',
+                    attribute: {
+                        type: column.inputType || 'text',
+                        name: column.name,
+                        class: '__form-input',
+                    },
+                    style: {
+                        width: column.width || '100%',
+                        boxSizing: 'border-box',
+                        padding: '4px 6px',
+                        fontSize: '13px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                    },
+                    parent: valueCell,
+                });
+
+                if (data[column.name] !== undefined) {
+                    input.value = data[column.name];
+                }
+
+                el._inputs[column.name] = input;
+            });
+
+            el.getData = function() {
+                var result = {};
+                columns.forEach(function(column) {
+                    var input = el._inputs[column.name];
+                    result[column.name] = column.dataType === 'number' ? Number(input.value) : input.value;
+                });
+                return result;
+            };
+
+            el.setData = function(newData) {
+                columns.forEach(function(column) {
+                    var input = el._inputs[column.name];
+                    if (newData[column.name] !== undefined) {
+                        input.value = newData[column.name];
+                    }
+                });
+            };
+
             return el;
         }
     });
@@ -336,9 +424,92 @@
                     class: '__list',
                 },
                 style: {
-                    
+                    width: '100%',
+                    borderCollapse: 'collapse',
                 },
             });
+
+            var columns = o.columns || [];
+            var datas = o.datas || [];
+
+            if (columns.length) {
+                var thead = fn.element.create({
+                    tagName: 'thead',
+                    parent: el,
+                });
+                var headRow = fn.element.create({
+                    tagName: 'tr',
+                    attribute: {
+                        class: '__list-head-row',
+                    },
+                    parent: thead,
+                });
+                columns.forEach(function(column) {
+                    fn.element.create({
+                        tagName: 'th',
+                        attribute: {
+                            class: '__list-head-cell',
+                        },
+                        text: column.label || column.name,
+                        style: {
+                            width: column.width || 'auto',
+                            padding: '6px 8px',
+                            fontSize: '12px',
+                            fontWeight: '700',
+                            textAlign: 'left',
+                            color: '#374151',
+                            borderBottom: '2px solid #e5e7eb',
+                            whiteSpace: 'nowrap',
+                        },
+                        parent: headRow,
+                    });
+                });
+            }
+
+            var tbody = fn.element.create({
+                tagName: 'tbody',
+                parent: el,
+            });
+
+            datas.forEach(function(data) {
+                var row = fn.element.create({
+                    tagName: 'tr',
+                    attribute: {
+                        class: '__list-row',
+                    },
+                    style: {
+                        cursor: typeof data.action === 'function' ? 'pointer' : 'default',
+                    },
+                    event: {
+                        click: function() {
+                            if (typeof data.action === 'function') {
+                                data.action(data);
+                            }
+                        },
+                    },
+                    data: data,
+                    parent: tbody,
+                });
+
+                var cellColumns = columns.length ? columns : [{ name: 'name', label: '' }];
+                cellColumns.forEach(function(column) {
+                    fn.element.create({
+                        tagName: 'td',
+                        attribute: {
+                            class: '__list-cell',
+                        },
+                        text: data[column.name] !== undefined ? data[column.name] : '',
+                        style: {
+                            padding: '6px 8px',
+                            fontSize: '13px',
+                            color: '#1f2937',
+                            borderBottom: '1px solid #f1f5f9',
+                        },
+                        parent: row,
+                    });
+                });
+            });
+
             return el;
         }
     });

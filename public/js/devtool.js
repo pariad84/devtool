@@ -43,11 +43,11 @@ fn.devtool = {
                 { name: 'Name', label: 'Name', width: '200px', dataType: 'string', inputType: 'text' },
                 { name: 'Status', label: 'Status', width: '100px', dataType: 'string', inputType: 'text' }
             ],
-            datas: [
-                { name: 'Item 1', value: 'Value 1' },
-                { name: 'Item 2', value: 'Value 2' },
-                { name: 'Item 3', value: 'Value 3' },
-            ],
+            data: {
+                ID: 1,
+                Name: 'Item 1',
+                Status: 'Active',
+            },
         });
         var list = fn.component.create({
             name: 'list',
@@ -58,9 +58,9 @@ fn.devtool = {
                 { name: 'Status', label: 'Status', width: '100px', dataType: 'string', inputType: 'text' }
             ],
             datas: [
-                { name: 'List Item 1', action: function() { console.log('List Item 1 clicked'); } },
-                { name: 'List Item 2', action: function() { console.log('List Item 2 clicked'); } },
-                { name: 'List Item 3', action: function() { console.log('List Item 3 clicked'); } },
+                { ID: 1, Name: 'List Item 1', Status: 'Active', action: function() { console.log('List Item 1 clicked'); } },
+                { ID: 2, Name: 'List Item 2', Status: 'Inactive', action: function() { console.log('List Item 2 clicked'); } },
+                { ID: 3, Name: 'List Item 3', Status: 'Active', action: function() { console.log('List Item 3 clicked'); } },
             ],
         });
 
