@@ -12,36 +12,36 @@
     fn.component.layout = {};
     fn.component.layout.data = {};
     
-    fn.ajax = async function (o) {
+    fn.ajax = async function (o = {}) {
         
     };
 
-    fn.localStorage.get = function(o) {
+    fn.localStorage.get = function(o = {}) {
         if (typeof(Storage) !== "undefined") {
             return localStorage.getItem(o.key);
         }
         return null;
     };
 
-    fn.localStorage.set = function(o) {
+    fn.localStorage.set = function(o = {}) {
         if (typeof(Storage) !== "undefined") {
             localStorage.setItem(o.key, o.value);
         }
     };
 
-    fn.data.get = function(o) {
+    fn.data.get = function(o = {}) {
         return this[o.key];
     }
 
-    fn.data.set = function(o) {
+    fn.data.set = function(o = {}) {
         this[o.key] = o.value;
     }
 
-    fn.element.get = function(o) {
+    fn.element.get = function(o = {}) {
         return document.querySelector(o.selector);
     };
 
-    fn.element.create = function(o) {
+    fn.element.create = function(o = {}) {
         var el = document.createElement(o.tagName);
         if (o.attribute) {
             for (const [key, value] of Object.entries(o.attribute)) {
@@ -84,7 +84,7 @@
         return el;
     };
 
-    fn.function.position.get = function(o) {
+    fn.function.position.get = function(o = {}) {
         var rect = o.el.getBoundingClientRect();
         return {
             top: rect.top + window.scrollY,
@@ -94,7 +94,7 @@
         };
     }
 
-    fn.component.create = function(o) {
+    fn.component.create = function(o = {}) {
         var layout = this.layout.get(o);
         var el = layout(o);
         
@@ -110,17 +110,17 @@
         return el;
     };
 
-    fn.component.layout.set = function(o) {
+    fn.component.layout.set = function(o = {}) {
         this.data[o.name] = o.value;
     };
 
-    fn.component.layout.get = function(o) {
+    fn.component.layout.get = function(o = {}) {
         return this.data[o.name];
     }
 
     fn.component.layout.set({
         name: 'popup',
-        value: function(o) {
+        value: function(o = {}) {
             // 팝업 위치 계산
             var top = 50;
             var left = 50;
@@ -201,26 +201,32 @@
                 },
             });
 
-            var btnSave = fn.element.create({
-                tagName: 'button',
-                attribute: {
-                    type: 'button',
-                    title: '저장',
-                    class: '__popup-btn __popup-save',
-                },
-                text: '💾',
-                style: {
-                    border: '1px solid #d1d5db',
-                    background: '#ffffff',
-                    borderRadius: '8px',
-                    width: '28px',
-                    height: '28px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    lineHeight: '1',
-                    padding: '0',
-                },
-            });
+            if (o.action && o.action.save) {
+                var btnSave = fn.element.create({
+                    tagName: 'button',
+                    attribute: {
+                        type: 'button',
+                        title: '저장',
+                        class: '__popup-btn __popup-save',
+                    },
+                    text: '💾',
+                    style: {
+                        border: '1px solid #d1d5db',
+                        background: '#ffffff',
+                        borderRadius: '8px',
+                        width: '28px',
+                        height: '28px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        lineHeight: '1',
+                        padding: '0',
+                    },
+                    event: {
+                        click: o.action.save
+                    },
+                });
+                actions.appendChild(btnSave);
+            }
 
             var btnRefresh = fn.element.create({
                 tagName: 'button',
@@ -276,7 +282,6 @@
                 },
             });
 
-            actions.appendChild(btnSave);
             actions.appendChild(btnRefresh);
             actions.appendChild(btnClose);
             header.appendChild(title);
@@ -313,7 +318,7 @@
 
     fn.component.layout.set({
         name: 'form',
-        value: function(o) {
+        value: function(o = {columns: [], data: {}}) {
             var el = fn.element.create({
                 tagName: 'table',
                 attribute: {
@@ -325,12 +330,9 @@
                 },
             });
 
-            var columns = o.columns || [];
-            var data = o.data || {};
-
             el._inputs = {};
 
-            columns.forEach(function(column) {
+            o.columns.forEach(function(column) {
                 var row = fn.element.create({
                     tagName: 'tr',
                     attribute: {
@@ -386,8 +388,8 @@
                     parent: valueCell,
                 });
 
-                if (data[column.name] !== undefined) {
-                    input.value = data[column.name];
+                if (o.data[column.name] !== undefined) {
+                    input.value = o.data[column.name];
                 }
 
                 el._inputs[column.name] = input;
@@ -395,7 +397,7 @@
 
             el.getData = function() {
                 var result = {};
-                columns.forEach(function(column) {
+                o.columns.forEach(function(column) {
                     var input = el._inputs[column.name];
                     result[column.name] = column.dataType === 'number' ? Number(input.value) : input.value;
                 });
@@ -403,7 +405,7 @@
             };
 
             el.setData = function(newData) {
-                columns.forEach(function(column) {
+                o.columns.forEach(function(column) {
                     var input = el._inputs[column.name];
                     if (newData[column.name] !== undefined) {
                         input.value = newData[column.name];
@@ -417,7 +419,7 @@
 
     fn.component.layout.set({
         name: 'list',
-        value: function(o) {
+        value: function(o = {columns: [], datas: []}) {
             var el = fn.element.create({
                 tagName: 'table',
                 attribute: {
@@ -429,10 +431,7 @@
                 },
             });
 
-            var columns = o.columns || [];
-            var datas = o.datas || [];
-
-            if (columns.length) {
+            if (o.columns.length) {
                 var thead = fn.element.create({
                     tagName: 'thead',
                     parent: el,
@@ -444,7 +443,7 @@
                     },
                     parent: thead,
                 });
-                columns.forEach(function(column) {
+                o.columns.forEach(function(column) {
                     fn.element.create({
                         tagName: 'th',
                         attribute: {
@@ -471,7 +470,7 @@
                 parent: el,
             });
 
-            datas.forEach(function(data) {
+            o.datas.forEach(function(data) {
                 var row = fn.element.create({
                     tagName: 'tr',
                     attribute: {
@@ -491,7 +490,7 @@
                     parent: tbody,
                 });
 
-                var cellColumns = columns.length ? columns : [{ name: 'name', label: '' }];
+                var cellColumns = o.columns.length ? o.columns : [{ name: 'name', label: '' }];
                 cellColumns.forEach(function(column) {
                     fn.element.create({
                         tagName: 'td',
@@ -516,7 +515,7 @@
 
     fn.component.layout.set({
         name: 'menu',
-        value: function(o) {
+        value: function(o = {}) {
             var el = fn.element.create({
                 tagName: 'div',
                 attribute: {

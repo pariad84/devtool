@@ -10,6 +10,11 @@ fn.devtool = {
             name: 'popup',
             title: 'DevTool',
             parent: document.body,
+            action: {
+                save: function() {
+                    console.log('DevTool 저장');
+                }
+            }
         });
         var menu = fn.component.create({
             name: 'menu',
