@@ -26,6 +26,22 @@ fn.devtool = {
                         title: 'Memo',
                         parent: document.body,
                         caller: popup,
+                        complete: function(o) {
+                            var list = fn.component.create({
+                                name: 'list',
+                                parent: o.popup.content,
+                                columns: [
+                                    { name: 'ID', label: 'ID', width: '60px', dataType: 'number', inputType: 'text' },
+                                    { name: 'Name', label: 'Name', width: '200px', dataType: 'string', inputType: 'text' },
+                                    { name: 'Status', label: 'Status', width: '100px', dataType: 'string', inputType: 'text' }
+                                ],
+                                datas: [
+                                    { ID: 1, Name: 'List Item 1', Status: 'Active', action: function() { console.log('List Item 1 clicked'); } },
+                                    { ID: 2, Name: 'List Item 2', Status: 'Inactive', action: function() { console.log('List Item 2 clicked'); } },
+                                    { ID: 3, Name: 'List Item 3', Status: 'Active', action: function() { console.log('List Item 3 clicked'); } },
+                                ],
+                            });
+                        }
                     });
                 } },
                 { name: 'Bookmark', action: function() {
@@ -34,6 +50,22 @@ fn.devtool = {
                         title: 'Bookmark',
                         parent: document.body,
                         caller: popup,
+                        complete: function(o) {
+                            var list = fn.component.create({
+                                name: 'list',
+                                parent: o.popup.content,
+                                columns: [
+                                    { name: 'ID', label: 'ID', width: '60px', dataType: 'number', inputType: 'text' },
+                                    { name: 'Name', label: 'Name', width: '200px', dataType: 'string', inputType: 'text' },
+                                    { name: 'Status', label: 'Status', width: '100px', dataType: 'string', inputType: 'text' }
+                                ],
+                                datas: [
+                                    { ID: 1, Name: 'List Item 1', Status: 'Active', action: function() { console.log('List Item 1 clicked'); } },
+                                    { ID: 2, Name: 'List Item 2', Status: 'Inactive', action: function() { console.log('List Item 2 clicked'); } },
+                                    { ID: 3, Name: 'List Item 3', Status: 'Active', action: function() { console.log('List Item 3 clicked'); } },
+                                ],
+                            });
+                        }
                     });
                 } },
                 { name: 'Menu 3', action: function() { console.log('Menu 3 clicked'); } },
@@ -53,20 +85,6 @@ fn.devtool = {
                 Name: 'Item 1',
                 Status: 'Active',
             },
-        });
-        var list = fn.component.create({
-            name: 'list',
-            parent: popup.content,
-            columns: [
-                { name: 'ID', label: 'ID', width: '60px', dataType: 'number', inputType: 'text' },
-                { name: 'Name', label: 'Name', width: '200px', dataType: 'string', inputType: 'text' },
-                { name: 'Status', label: 'Status', width: '100px', dataType: 'string', inputType: 'text' }
-            ],
-            datas: [
-                { ID: 1, Name: 'List Item 1', Status: 'Active', action: function() { console.log('List Item 1 clicked'); } },
-                { ID: 2, Name: 'List Item 2', Status: 'Inactive', action: function() { console.log('List Item 2 clicked'); } },
-                { ID: 3, Name: 'List Item 3', Status: 'Active', action: function() { console.log('List Item 3 clicked'); } },
-            ],
         });
 
         console.log(popup);

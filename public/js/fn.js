@@ -312,6 +312,9 @@
             popup.header = header;
             popup.content = content;
             popup.title = title;
+            if (o.complete) {
+                o.complete({ popup: popup });
+            }
             return popup;
         }
     });
