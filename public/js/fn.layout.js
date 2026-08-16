@@ -27,6 +27,97 @@
     }
 
     fn.component.layout.set({
+        name: 'popup-actions',
+        value: function(o = {}) {
+            var el = fn.element.create({
+                tagName: 'div',
+                attribute: {
+                    class: '__popup-actions',
+                },
+            });
+
+            fn.element.create({
+                parent: el,
+                tagName: 'button',
+                attribute: {
+                    type: 'button',
+                    title: '테마 전환',
+                    class: '__popup-btn __popup-theme',
+                },
+                text: isDarkTheme() ? '☀️' : '🌙',
+                event: {
+                    click: function() {
+                        toggleTheme(this);
+                    }
+                },
+            });
+
+            if (o.action && o.action.edit) {
+                fn.element.create({
+                    parent: el,
+                    tagName: 'button',
+                    attribute: {
+                        type: 'button',
+                        title: '새로 만들기',
+                        class: '__popup-btn __popup-edit',
+                    },
+                    text: '✏️',
+                    event: {
+                        click: o.action.edit
+                    },
+                });
+            }
+
+            if (o.action && o.action.save) {
+                fn.element.create({
+                    parent: el,
+                    tagName: 'button',
+                    attribute: {
+                        type: 'button',
+                        title: '저장',
+                        class: '__popup-btn __popup-save',
+                    },
+                    text: '💾',
+                    event: {
+                        click: o.action.save
+                    },
+                });
+            }
+
+            fn.element.create({
+                parent: el,
+                tagName: 'button',
+                attribute: {
+                    type: 'button',
+                    title: '새로고침',
+                    class: '__popup-btn __popup-refresh',
+                },
+                text: '↻',
+            });
+
+            fn.element.create({
+                parent: el,
+                tagName: 'button',
+                attribute: {
+                    type: 'button',
+                    title: '닫기',
+                    class: '__popup-btn __popup-close',
+                },
+                text: '✕',
+                event: {
+                    click: function() {
+                        if (o.onClose) {
+                            o.onClose();
+                        }
+                    }
+                },
+            });
+
+            return el;
+        }
+    });
+
+    fn.component.layout.set({
         name: 'popup',
         value: function(o = {}) {
             // 팝업 위치 계산
@@ -71,80 +162,22 @@
                 text: o.title || 'Popup',
             });
 
-            var actions = fn.element.create({
+            var actions = fn.component.create({
+                name: 'popup-actions',
                 parent: header,
-                tagName: 'div',
-                attribute: {
-                    class: '__popup-actions',
-                },
-            });
-
-            fn.element.create({
-                parent: actions,
-                tagName: 'button',
-                attribute: {
-                    type: 'button',
-                    title: '테마 전환',
-                    class: '__popup-btn __popup-theme',
-                },
-                text: isDarkTheme() ? '☀️' : '🌙',
-                event: {
-                    click: function() {
-                        toggleTheme(this);
-                    }
-                },
-            });
-
-            if (o.action && o.action.save) {
-                fn.element.create({
-                    parent: actions,
-                    tagName: 'button',
-                    attribute: {
-                        type: 'button',
-                        title: '저장',
-                        class: '__popup-btn __popup-save',
-                    },
-                    text: '💾',
-                    event: {
-                        click: o.action.save
-                    },
-                });
-            }
-
-            fn.element.create({
-                parent: actions,
-                tagName: 'button',
-                attribute: {
-                    type: 'button',
-                    title: '새로고침',
-                    class: '__popup-btn __popup-refresh',
-                },
-                text: '↻',
-            });
-
-            fn.element.create({
-                parent: actions,
-                tagName: 'button',
-                attribute: {
-                    type: 'button',
-                    title: '닫기',
-                    class: '__popup-btn __popup-close',
-                },
-                text: '✕',
-                event: {
-                    click: function() {
-                        var popupArray = fn.component.data['popup'];
-                        if (popupArray) {
-                            var index = popupArray.indexOf(popup);
-                            if (index > -1) {
-                                popupArray.splice(index, 1);
-                            }
+                action: o.action,
+                onClose: function() {
+                    var popupArray = fn.component.data['popup'];
+                    if (popupArray) {
+                        var index = popupArray.indexOf(popup);
+                        if (index > -1) {
+                            popupArray.splice(index, 1);
                         }
-                        popup.classList.add('__popup--leave');
-                        setTimeout(function() {
-                            popup.remove();
-                        }, 200);
                     }
+                    popup.classList.add('__popup--leave');
+                    setTimeout(function() {
+                        popup.remove();
+                    }, 200);
                 },
             });
 
@@ -156,7 +189,8 @@
                 },
             });
 
-            $(popup).draggable({
+            fn.element.draggable({
+                el: popup,
                 handle: header,
             });
 

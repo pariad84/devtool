@@ -1,7 +1,6 @@
 (function(global) {
     const fn = {};
 
-
     fn.localStorage = {};
     fn.data = {};
     fn.element = {};
@@ -13,22 +12,31 @@
     fn.component.layout.data = {};
 
     fn.ajax = async function (o = {}) {
-        $.ajax({
-            url: o.url,
-            method: o.method || 'POST',
-            contentType: o.contentType || 'application/json; charset=UTF-8',
-            data: JSON.stringify(o.data || {}),
-            success: function(response) {
-                if (o.success) {
-                    o.success(response);
-                }
-            },
-            error: function(xhr, status, error) {
+        var method = (o.method || 'POST').toUpperCase();
+        var options = { method: method };
+        if (method !== 'GET' && method !== 'HEAD') {
+            options.headers = { 'Content-Type': o.contentType || 'application/json; charset=UTF-8' };
+            options.body = JSON.stringify(o.data || {});
+        }
+
+        try {
+            var response = await fetch(o.url, options);
+            var result = await response.json();
+            if (!response.ok) {
                 if (o.error) {
-                    o.error(xhr, status, error);
+                    o.error(result, response.status);
                 }
+                return;
             }
-        });
+            if (o.success) {
+                o.success(result);
+            }
+            return result;
+        } catch (err) {
+            if (o.error) {
+                o.error(err);
+            }
+        }
     };
 
     fn.localStorage.get = function(o = {}) {
@@ -97,6 +105,37 @@
             el._caller = o.caller;
         }
         return el;
+    };
+
+    fn.element.draggable = function(o = {}) {
+        var el = o.el;
+        var handle = o.handle || el;
+        var startX, startY, startLeft, startTop;
+
+        function onPointerMove(e) {
+            el.style.left = (startLeft + (e.clientX - startX)) + 'px';
+            el.style.top = (startTop + (e.clientY - startY)) + 'px';
+        }
+
+        function onPointerUp() {
+            document.removeEventListener('pointermove', onPointerMove);
+            document.removeEventListener('pointerup', onPointerUp);
+        }
+
+        handle.style.touchAction = 'none';
+        handle.addEventListener('pointerdown', function(e) {
+            if (e.target.closest('button, input, select, textarea')) {
+                return;
+            }
+            e.preventDefault();
+            startX = e.clientX;
+            startY = e.clientY;
+            var rect = el.getBoundingClientRect();
+            startLeft = rect.left;
+            startTop = rect.top;
+            document.addEventListener('pointermove', onPointerMove);
+            document.addEventListener('pointerup', onPointerUp);
+        });
     };
 
     fn.function.position.get = function(o = {}) {

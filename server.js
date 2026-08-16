@@ -9,6 +9,27 @@ const port = 3000;
 const publicDir = path.join(__dirname, 'public');   // CSS, JS, 이미지 등 정적 파일
 const viewsDir = path.join(__dirname, 'views');     // HTML 파일 (index.html 등)
 
+function readJsonBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', (chunk) => { data += chunk; });
+    req.on('end', () => {
+      try {
+        resolve(data ? JSON.parse(data) : {});
+      } catch (err) {
+        reject(err);
+      }
+    });
+    req.on('error', reject);
+  });
+}
+
+function sendJson(res, statusCode, body) {
+  res.statusCode = statusCode;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.end(JSON.stringify(body));
+}
+
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -57,6 +78,87 @@ const server = http.createServer((req, res) => {
         res.statusCode = 500;
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
         res.end(JSON.stringify({ ok: false, error: err.message }));
+      });
+    return;
+  }
+
+  // 메모 등록
+  if (pathname === '/api/memo' && req.method === 'POST') {
+    readJsonBody(req)
+      .then((body) => pool.query(
+        'INSERT INTO memo (name, status, content) VALUES ($1, $2, $3) RETURNING id, name, status, content, created_at, updated_at',
+        [body.name || '', body.status || 'Active', body.content || '']
+      ))
+      .then((result) => sendJson(res, 201, { ok: true, row: result.rows[0] }))
+      .catch((err) => {
+        console.error('메모 등록 실패:', err);
+        sendJson(res, 500, { ok: false, error: err.message });
+      });
+    return;
+  }
+
+  // 메모 수정
+  const memoIdMatch = pathname.match(/^\/api\/memo\/(\d+)$/);
+  if (memoIdMatch && req.method === 'PUT') {
+    const memoId = Number(memoIdMatch[1]);
+    readJsonBody(req)
+      .then((body) => pool.query(
+        'UPDATE memo SET name = $1, status = $2, content = $3, updated_at = now() WHERE id = $4 RETURNING id, name, status, content, created_at, updated_at',
+        [body.name || '', body.status || 'Active', body.content || '', memoId]
+      ))
+      .then((result) => sendJson(res, 200, { ok: true, row: result.rows[0] }))
+      .catch((err) => {
+        console.error('메모 수정 실패:', err);
+        sendJson(res, 500, { ok: false, error: err.message });
+      });
+    return;
+  }
+
+  // 북마크 목록 조회
+  if (pathname === '/api/bookmark' && req.method === 'GET') {
+    pool.query('SELECT id, name, url, status, created_at, updated_at FROM bookmark ORDER BY id')
+      .then((result) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.end(JSON.stringify({ ok: true, rows: result.rows }));
+      })
+      .catch((err) => {
+        console.error('북마크 목록 조회 실패:', err);
+        res.statusCode = 500;
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.end(JSON.stringify({ ok: false, error: err.message }));
+      });
+    return;
+  }
+
+  // 북마크 등록
+  if (pathname === '/api/bookmark' && req.method === 'POST') {
+    readJsonBody(req)
+      .then((body) => pool.query(
+        'INSERT INTO bookmark (name, url, status) VALUES ($1, $2, $3) RETURNING id, name, url, status, created_at, updated_at',
+        [body.name || '', body.url || '', body.status || 'Active']
+      ))
+      .then((result) => sendJson(res, 201, { ok: true, row: result.rows[0] }))
+      .catch((err) => {
+        console.error('북마크 등록 실패:', err);
+        sendJson(res, 500, { ok: false, error: err.message });
+      });
+    return;
+  }
+
+  // 북마크 수정
+  const bookmarkIdMatch = pathname.match(/^\/api\/bookmark\/(\d+)$/);
+  if (bookmarkIdMatch && req.method === 'PUT') {
+    const bookmarkId = Number(bookmarkIdMatch[1]);
+    readJsonBody(req)
+      .then((body) => pool.query(
+        'UPDATE bookmark SET name = $1, url = $2, status = $3, updated_at = now() WHERE id = $4 RETURNING id, name, url, status, created_at, updated_at',
+        [body.name || '', body.url || '', body.status || 'Active', bookmarkId]
+      ))
+      .then((result) => sendJson(res, 200, { ok: true, row: result.rows[0] }))
+      .catch((err) => {
+        console.error('북마크 수정 실패:', err);
+        sendJson(res, 500, { ok: false, error: err.message });
       });
     return;
   }
