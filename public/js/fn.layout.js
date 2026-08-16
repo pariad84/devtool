@@ -26,6 +26,59 @@
         }
     }
 
+    // fn.component.data['popup']을 생성 순서 + bringToFront 이동을 반영한
+    // "활성 순서 스택"으로 그대로 활용 — 맨 뒤가 곧 제일 위(활성) 팝업
+    function getTopPopup() {
+        var popupArray = fn.component.data['popup'];
+        return (popupArray && popupArray.length) ? popupArray[popupArray.length - 1] : null;
+    }
+
+    function bringToFront(popupEl) {
+        popupEl.style.zIndex = ++popupZIndex;
+        var popupArray = fn.component.data['popup'];
+        if (popupArray) {
+            var index = popupArray.indexOf(popupEl);
+            if (index > -1) {
+                popupArray.splice(index, 1);
+                popupArray.push(popupEl);
+            }
+        }
+    }
+
+    function closePopup(popupEl) {
+        var popupArray = fn.component.data['popup'];
+        if (popupArray) {
+            var index = popupArray.indexOf(popupEl);
+            if (index > -1) {
+                popupArray.splice(index, 1);
+            }
+        }
+        popupEl.classList.add('__popup--leave');
+        setTimeout(function() {
+            popupEl.remove();
+            // 닫힌 팝업 다음으로 남아있는 팝업 중 제일 위(활성)로 포커스를 옮기고,
+            // 하나도 안 남았으면 DevTool을 여는 톱니바퀴 버튼으로 되돌린다
+            var next = getTopPopup();
+            if (next) {
+                next.focus();
+            } else {
+                var toggleBtn = document.querySelector('.__devtool-toggle-btn');
+                if (toggleBtn) {
+                    toggleBtn.focus();
+                }
+            }
+        }, 200);
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            var top = getTopPopup();
+            if (top) {
+                closePopup(top);
+            }
+        }
+    });
+
     fn.component.layout.set({
         name: 'popup-theme-btn',
         value: function(o = {}) {
@@ -128,11 +181,6 @@
                 },
             });
 
-            fn.component.create({
-                name: 'popup-theme-btn',
-                parent: el,
-            });
-
             if (o.action && o.action.edit) {
                 fn.component.create({
                     name: 'popup-edit-btn',
@@ -187,6 +235,7 @@
                 tagName: 'div',
                 attribute: {
                     class: '__popup',
+                    tabindex: '-1',
                 },
                 style: {
                     position: 'fixed',
@@ -218,17 +267,7 @@
                 parent: header,
                 action: o.action,
                 onClose: function() {
-                    var popupArray = fn.component.data['popup'];
-                    if (popupArray) {
-                        var index = popupArray.indexOf(popup);
-                        if (index > -1) {
-                            popupArray.splice(index, 1);
-                        }
-                    }
-                    popup.classList.add('__popup--leave');
-                    setTimeout(function() {
-                        popup.remove();
-                    }, 200);
+                    closePopup(popup);
                 },
             });
 
@@ -245,8 +284,8 @@
                 handle: header,
             });
 
-            popup.addEventListener('mousedown', function() {
-                popup.style.zIndex = ++popupZIndex;
+            popup.addEventListener('pointerdown', function() {
+                bringToFront(popup);
             }, true);
 
             popup.header = header;
@@ -267,6 +306,7 @@
                 attribute: {
                     class: '__form',
                 },
+                data: o.data,
             });
 
             el._inputs = {};

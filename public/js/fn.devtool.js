@@ -3,17 +3,11 @@ fn.devtool = {
     isOpen: false,
     toggle: async function() {
         this.isOpen = !this.isOpen;
-        console.log('DevTool ' + (this.isOpen ? '열림' : '닫힘'));
 
         var popup = fn.component.create({
             name: 'popup',
             title: 'DevTool',
             parent: document.body,
-            action: {
-                save: function() {
-                    console.log('DevTool 저장');
-                }
-            }
         });
 
         // fields가 없는 리소스(Settings 등)는 목록/상세 없이 빈 팝업만 띄움
@@ -24,6 +18,12 @@ fn.devtool = {
                     title: config.name,
                     parent: document.body,
                     caller: popup,
+                    complete: function(o) {
+                        fn.component.create({
+                            name: 'popup-theme-btn',
+                            parent: o.el.content,
+                        });
+                    },
                 });
                 return;
             }
@@ -114,8 +114,6 @@ fn.devtool = {
         } catch (err) {
             console.error('리소스 목록 조회 실패:', err);
         }
-
-        console.log(popup);
     }
 };
 
