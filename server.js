@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const pool = require('./db');
 
 const hostname = '127.0.0.1';
 const port = 3000;
@@ -25,6 +26,23 @@ const server = http.createServer((req, res) => {
   const baseURL = `http://${req.headers.host || `${hostname}:${port}`}`;
   const parsedUrl = new URL(req.url, baseURL);
   let pathname = decodeURIComponent(parsedUrl.pathname);
+
+  // DB 연결 상태 확인용 헬스체크
+  if (pathname === '/api/db/health') {
+    pool.query('SELECT NOW() AS now')
+      .then((result) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.end(JSON.stringify({ ok: true, now: result.rows[0].now }));
+      })
+      .catch((err) => {
+        console.error('DB 헬스체크 실패:', err);
+        res.statusCode = 500;
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.end(JSON.stringify({ ok: false, error: err.message }));
+      });
+    return;
+  }
 
   // 루트 경로는 index.html로 처리
   if (pathname === '/') {
