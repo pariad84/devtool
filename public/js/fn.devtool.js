@@ -5,6 +5,66 @@ fn.devtool = {
         this.isOpen = !this.isOpen;
         console.log('DevTool ' + (this.isOpen ? '열림' : '닫힘'));
 
+        var datas = [
+            { name: 'memo', columns: [
+                { name: 'id', label: 'ID', list: {
+                    width: '60px', dataType: 'number', inputType: 'text'
+                }, form: {
+                    width: '60px', dataType: 'number', inputType: 'text'
+                } },
+                { name: 'name', label: 'Name', list: {
+                    width: '200px', dataType: 'string', inputType: 'text'
+                }, form: {
+                    width: '200px', dataType: 'string', inputType: 'text'
+                } },
+                { name: 'status', label: 'Status', list: {
+                    width: '100px', dataType: 'string', inputType: 'text'
+                }, form: {
+                    width: '100px', dataType: 'string', inputType: 'text'
+                } },
+                { name: 'content', label: 'Content', form: {
+                    width: '100%', dataType: 'string', inputType: 'text'
+                } }
+            ] },
+            { name: 'bookmark', columns: [
+                { name: 'id', label: 'ID', list: {
+                    width: '60px', dataType: 'number', inputType: 'text'
+                }, form: {
+                    width: '60px', dataType: 'number', inputType: 'text'
+                } },
+                { name: 'name', label: 'Name', list: {
+                    width: '200px', dataType: 'string', inputType: 'text'
+                }, form: {
+                    width: '200px', dataType: 'string', inputType: 'text'
+                } },
+                { name: 'url', label: 'URL', list: {
+                    width: '100%', dataType: 'string', inputType: 'text'
+                }, form: {
+                    width: '100%', dataType: 'string', inputType: 'text'
+                } }
+            ] },
+        ];
+
+        function findColumns(resourceName) {
+            var resource = datas.filter(function(d) { return d.name === resourceName; })[0];
+            return resource ? resource.columns : [];
+        }
+
+        // list가 없는 컬럼(예: content)은 목록 화면에서 제외하고, form은 전체 컬럼을 사용
+        function toListColumns(columns) {
+            return columns
+                .filter(function(column) { return !!column.list; })
+                .map(function(column) {
+                    return Object.assign({ name: column.name, label: column.label }, column.list);
+                });
+        }
+
+        function toFormColumns(columns) {
+            return columns.map(function(column) {
+                return Object.assign({ name: column.name, label: column.label }, column.form || {});
+            });
+        }
+
         var popup = fn.component.create({
             name: 'popup',
             title: 'DevTool',
@@ -22,14 +82,8 @@ fn.devtool = {
                 { name: 'Memo', action: function() {
                     var memoPopup;
 
-                    var memoColumns = [
-                        { name: 'id', label: 'ID', width: '60px', dataType: 'number', inputType: 'text' },
-                        { name: 'name', label: 'Name', width: '200px', dataType: 'string', inputType: 'text' },
-                        { name: 'status', label: 'Status', width: '100px', dataType: 'string', inputType: 'text' }
-                    ];
-                    var memoDetailColumns = memoColumns.concat([
-                        { name: 'content', label: 'Content', width: '100%', dataType: 'string', inputType: 'text' }
-                    ]);
+                    var memoColumns = toListColumns(findColumns('memo'));
+                    var memoDetailColumns = toFormColumns(findColumns('memo'));
 
                     function loadMemoList(container) {
                         fn.ajax({
@@ -108,14 +162,8 @@ fn.devtool = {
                 { name: 'Bookmark', action: function() {
                     var bookmarkPopup;
 
-                    var bookmarkColumns = [
-                        { name: 'id', label: 'ID', width: '60px', dataType: 'number', inputType: 'text' },
-                        { name: 'name', label: 'Name', width: '200px', dataType: 'string', inputType: 'text' },
-                        { name: 'status', label: 'Status', width: '100px', dataType: 'string', inputType: 'text' }
-                    ];
-                    var bookmarkDetailColumns = bookmarkColumns.concat([
-                        { name: 'url', label: 'URL', width: '100%', dataType: 'string', inputType: 'text' }
-                    ]);
+                    var bookmarkColumns = toListColumns(findColumns('bookmark'));
+                    var bookmarkDetailColumns = toFormColumns(findColumns('bookmark'));
 
                     function loadBookmarkList(container) {
                         fn.ajax({

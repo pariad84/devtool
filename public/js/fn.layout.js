@@ -27,17 +27,9 @@
     }
 
     fn.component.layout.set({
-        name: 'popup-actions',
+        name: 'popup-theme-btn',
         value: function(o = {}) {
-            var el = fn.element.create({
-                tagName: 'div',
-                attribute: {
-                    class: '__popup-actions',
-                },
-            });
-
-            fn.element.create({
-                parent: el,
+            return fn.element.create({
                 tagName: 'button',
                 attribute: {
                     type: 'button',
@@ -51,41 +43,49 @@
                     }
                 },
             });
+        }
+    });
 
-            if (o.action && o.action.edit) {
-                fn.element.create({
-                    parent: el,
-                    tagName: 'button',
-                    attribute: {
-                        type: 'button',
-                        title: '새로 만들기',
-                        class: '__popup-btn __popup-edit',
-                    },
-                    text: '✏️',
-                    event: {
-                        click: o.action.edit
-                    },
-                });
-            }
+    fn.component.layout.set({
+        name: 'popup-edit-btn',
+        value: function(o = {}) {
+            return fn.element.create({
+                tagName: 'button',
+                attribute: {
+                    type: 'button',
+                    title: '새로 만들기',
+                    class: '__popup-btn __popup-edit',
+                },
+                text: '✏️',
+                event: {
+                    click: o.onClick
+                },
+            });
+        }
+    });
 
-            if (o.action && o.action.save) {
-                fn.element.create({
-                    parent: el,
-                    tagName: 'button',
-                    attribute: {
-                        type: 'button',
-                        title: '저장',
-                        class: '__popup-btn __popup-save',
-                    },
-                    text: '💾',
-                    event: {
-                        click: o.action.save
-                    },
-                });
-            }
+    fn.component.layout.set({
+        name: 'popup-save-btn',
+        value: function(o = {}) {
+            return fn.element.create({
+                tagName: 'button',
+                attribute: {
+                    type: 'button',
+                    title: '저장',
+                    class: '__popup-btn __popup-save',
+                },
+                text: '💾',
+                event: {
+                    click: o.onClick
+                },
+            });
+        }
+    });
 
-            fn.element.create({
-                parent: el,
+    fn.component.layout.set({
+        name: 'popup-refresh-btn',
+        value: function(o = {}) {
+            return fn.element.create({
                 tagName: 'button',
                 attribute: {
                     type: 'button',
@@ -93,10 +93,17 @@
                     class: '__popup-btn __popup-refresh',
                 },
                 text: '↻',
+                event: {
+                    click: o.onClick
+                },
             });
+        }
+    });
 
-            fn.element.create({
-                parent: el,
+    fn.component.layout.set({
+        name: 'popup-close-btn',
+        value: function(o = {}) {
+            return fn.element.create({
                 tagName: 'button',
                 attribute: {
                     type: 'button',
@@ -105,10 +112,54 @@
                 },
                 text: '✕',
                 event: {
-                    click: function() {
-                        if (o.onClose) {
-                            o.onClose();
-                        }
+                    click: o.onClick
+                },
+            });
+        }
+    });
+
+    fn.component.layout.set({
+        name: 'popup-actions',
+        value: function(o = {}) {
+            var el = fn.element.create({
+                tagName: 'div',
+                attribute: {
+                    class: '__popup-actions',
+                },
+            });
+
+            fn.component.create({
+                name: 'popup-theme-btn',
+                parent: el,
+            });
+
+            if (o.action && o.action.edit) {
+                fn.component.create({
+                    name: 'popup-edit-btn',
+                    parent: el,
+                    onClick: o.action.edit,
+                });
+            }
+
+            if (o.action && o.action.save) {
+                fn.component.create({
+                    name: 'popup-save-btn',
+                    parent: el,
+                    onClick: o.action.save,
+                });
+            }
+
+            fn.component.create({
+                name: 'popup-refresh-btn',
+                parent: el,
+            });
+
+            fn.component.create({
+                name: 'popup-close-btn',
+                parent: el,
+                onClick: function() {
+                    if (o.onClose) {
+                        o.onClose();
                     }
                 },
             });
