@@ -2,10 +2,7 @@
     const fn = {};
 
     fn.localStorage = {};
-    fn.data = {};
     fn.element = {};
-    fn.function = {};
-    fn.function.position = {};
     fn.component = {};
     fn.component.data = {};
     fn.component.layout = {};
@@ -50,18 +47,6 @@
         if (typeof(Storage) !== "undefined") {
             localStorage.setItem(o.key, o.value);
         }
-    };
-
-    fn.data.get = function(o = {}) {
-        return this[o.key];
-    }
-
-    fn.data.set = function(o = {}) {
-        this[o.key] = o.value;
-    }
-
-    fn.element.get = function(o = {}) {
-        return document.querySelector(o.selector);
     };
 
     fn.element.create = function(o = {}) {
@@ -137,16 +122,6 @@
             document.addEventListener('pointerup', onPointerUp);
         });
     };
-
-    fn.function.position.get = function(o = {}) {
-        var rect = o.el.getBoundingClientRect();
-        return {
-            top: rect.top + window.scrollY,
-            left: rect.left + window.scrollX,
-            width: rect.width,
-            height: rect.height,
-        };
-    }
 
     fn.component.create = function(o = {}) {
         var layout = this.layout.get(o);

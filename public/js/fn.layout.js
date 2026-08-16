@@ -272,6 +272,10 @@
             el._inputs = {};
 
             o.columns.forEach(function(column) {
+                if (!column.form) {
+                    return;
+                }
+
                 var row = fn.element.create({
                     tagName: 'tr',
                     attribute: {
@@ -300,12 +304,12 @@
                 var input = fn.element.create({
                     tagName: 'input',
                     attribute: {
-                        type: column.inputType || 'text',
+                        type: column.form.inputType || 'text',
                         name: column.name,
                         class: '__form-input',
                     },
                     style: {
-                        width: column.width || '100%',
+                        width: column.form.width || '100%',
                     },
                     parent: valueCell,
                 });
@@ -320,14 +324,20 @@
             el.getData = function() {
                 var result = {};
                 o.columns.forEach(function(column) {
+                    if (!column.form) {
+                        return;
+                    }
                     var input = el._inputs[column.name];
-                    result[column.name] = column.dataType === 'number' ? Number(input.value) : input.value;
+                    result[column.name] = column.form.dataType === 'number' ? Number(input.value) : input.value;
                 });
                 return result;
             };
 
             el.setData = function(newData) {
                 o.columns.forEach(function(column) {
+                    if (!column.form) {
+                        return;
+                    }
                     var input = el._inputs[column.name];
                     if (newData[column.name] !== undefined) {
                         input.value = newData[column.name];
@@ -349,7 +359,7 @@
                 },
             });
 
-            if (o.columns.length) {
+            if (o.columns.some(function(column) { return !!column.list; })) {
                 var thead = fn.element.create({
                     tagName: 'thead',
                     parent: el,
@@ -362,6 +372,9 @@
                     parent: thead,
                 });
                 o.columns.forEach(function(column) {
+                    if (!column.list) {
+                        return;
+                    }
                     fn.element.create({
                         tagName: 'th',
                         attribute: {
@@ -369,7 +382,7 @@
                         },
                         text: column.label || column.name,
                         style: {
-                            width: column.width || 'auto',
+                            width: column.list.width || 'auto',
                         },
                         parent: headRow,
                     });
@@ -399,17 +412,30 @@
                     parent: tbody,
                 });
 
-                var cellColumns = o.columns.length ? o.columns : [{ name: 'name', label: '' }];
-                cellColumns.forEach(function(column) {
+                if (o.columns.length) {
+                    o.columns.forEach(function(column) {
+                        if (!column.list) {
+                            return;
+                        }
+                        fn.element.create({
+                            tagName: 'td',
+                            attribute: {
+                                class: '__list-cell',
+                            },
+                            text: data[column.name] !== undefined ? data[column.name] : '',
+                            parent: row,
+                        });
+                    });
+                } else {
                     fn.element.create({
                         tagName: 'td',
                         attribute: {
                             class: '__list-cell',
                         },
-                        text: data[column.name] !== undefined ? data[column.name] : '',
+                        text: data.name !== undefined ? data.name : '',
                         parent: row,
                     });
-                });
+                }
             });
 
             return el;
