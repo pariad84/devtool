@@ -27,7 +27,7 @@ fn.devtool = {
                         parent: document.body,
                         caller: popup,
                         complete: function(o) {
-                            var memoPopup = o.popup;
+                            var memoPopup = o.el;
 
                             var memoColumns = [
                                 { name: 'id', label: 'ID', width: '60px', dataType: 'number', inputType: 'text' },
@@ -47,7 +47,7 @@ fn.devtool = {
                                     complete: function(o) {
                                         fn.component.create({
                                             name: 'form',
-                                            parent: o.popup.content,
+                                            parent: o.el.content,
                                             columns: memoDetailColumns,
                                             data: data,
                                         });
@@ -86,7 +86,7 @@ fn.devtool = {
                         complete: function(o) {
                             var list = fn.component.create({
                                 name: 'list',
-                                parent: o.popup.content,
+                                parent: o.el.content,
                                 columns: [
                                     { name: 'ID', label: 'ID', width: '60px', dataType: 'number', inputType: 'text' },
                                     { name: 'Name', label: 'Name', width: '200px', dataType: 'string', inputType: 'text' },
@@ -104,20 +104,6 @@ fn.devtool = {
                 { name: 'Menu 3', action: function() { console.log('Menu 3 clicked'); } },
             ],
             parent: popup.content,
-        });
-        var form = fn.component.create({
-            name: 'form',
-            parent: popup.content,
-            columns: [
-                { name: 'ID', label: 'ID', width: '60px', dataType: 'number', inputType: 'text' },
-                { name: 'Name', label: 'Name', width: '200px', dataType: 'string', inputType: 'text' },
-                { name: 'Status', label: 'Status', width: '100px', dataType: 'string', inputType: 'text' }
-            ],
-            data: {
-                ID: 1,
-                Name: 'Item 1',
-                Status: 'Active',
-            },
         });
 
         console.log(popup);
