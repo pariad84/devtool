@@ -120,39 +120,9 @@ document.addEventListener('DOMContentLoaded', function() {
             class: '__devtool-toggle-btn',
         },
         text: '⚙',
-        style: {
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            width: '50px',
-            height: '50px',
-            borderRadius: '50%',
-            border: 'none',
-            backgroundColor: '#4f46e5',
-            color: '#ffffff',
-            fontSize: '24px',
-            cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)',
-            zIndex: '10000',
-            transition: 'all 0.3s ease',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '0',
-        },
         event: {
             click: function() {
                 fn.devtool.toggle();
-            },
-            mouseover: function() {
-                this.style.backgroundColor = '#4338ca';
-                this.style.boxShadow = '0 6px 16px rgba(79, 70, 229, 0.4)';
-                this.style.transform = 'scale(1.1)';
-            },
-            mouseout: function() {
-                this.style.backgroundColor = '#4f46e5';
-                this.style.boxShadow = '0 4px 12px rgba(79, 70, 229, 0.3)';
-                this.style.transform = 'scale(1)';
             },
         },
         parent: document.body,

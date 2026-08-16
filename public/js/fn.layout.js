@@ -1,5 +1,30 @@
 (function(global) {
     var fn = global.fn;
+    var THEME_KEY = 'fn-theme';
+    var popupZIndex = 1000;
+
+    (function applyStoredTheme() {
+        var saved = fn.localStorage.get({ key: THEME_KEY });
+        if (saved === 'dark' || saved === 'light') {
+            document.documentElement.setAttribute('data-fn-theme', saved);
+        }
+    })();
+
+    function isDarkTheme() {
+        var attr = document.documentElement.getAttribute('data-fn-theme');
+        if (attr === 'dark') return true;
+        if (attr === 'light') return false;
+        return !!(global.matchMedia && global.matchMedia('(prefers-color-scheme: dark)').matches);
+    }
+
+    function toggleTheme(btn) {
+        var next = isDarkTheme() ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-fn-theme', next);
+        fn.localStorage.set({ key: THEME_KEY, value: next });
+        if (btn) {
+            btn.textContent = next === 'dark' ? '☀️' : '🌙';
+        }
+    }
 
     fn.component.layout.set({
         name: 'popup',
@@ -25,19 +50,7 @@
                     position: 'fixed',
                     top: top + 'px',
                     left: left + 'px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.96)',
-                    border: '1px solid #d7dce5',
-                    borderRadius: '12px',
-                    boxShadow: '0 12px 30px rgba(15, 23, 42, 0.18)',
-                    minWidth: '320px',
-                    minHeight: '180px',
-                    maxWidth: '90vw',
-                    maxHeight: '90vh',
-                    overflow: 'hidden',
-                    resize: 'both',
-                    boxSizing: 'border-box',
-                    transform: 'none',
-                    fontFamily: 'sans-serif',
+                    zIndex: ++popupZIndex,
                 },
             });
 
@@ -46,16 +59,6 @@
                 tagName: 'div',
                 attribute: {
                     class: '__popup-header',
-                },
-                style: {
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    cursor: 'move',
-                    background: 'linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%)',
-                    padding: '10px 12px',
-                    borderBottom: '1px solid #dfe5ee',
-                    userSelect: 'none',
                 },
             });
 
@@ -66,12 +69,6 @@
                     class: '__popup-title',
                 },
                 text: o.title || 'Popup',
-                style: {
-                    fontSize: '14px',
-                    fontWeight: '700',
-                    color: '#1f2937',
-                    letterSpacing: '0.02em',
-                },
             });
 
             var actions = fn.element.create({
@@ -80,10 +77,21 @@
                 attribute: {
                     class: '__popup-actions',
                 },
-                style: {
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
+            });
+
+            fn.element.create({
+                parent: actions,
+                tagName: 'button',
+                attribute: {
+                    type: 'button',
+                    title: '테마 전환',
+                    class: '__popup-btn __popup-theme',
+                },
+                text: isDarkTheme() ? '☀️' : '🌙',
+                event: {
+                    click: function() {
+                        toggleTheme(this);
+                    }
                 },
             });
 
@@ -97,17 +105,6 @@
                         class: '__popup-btn __popup-save',
                     },
                     text: '💾',
-                    style: {
-                        border: '1px solid #d1d5db',
-                        background: '#ffffff',
-                        borderRadius: '8px',
-                        width: '28px',
-                        height: '28px',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        lineHeight: '1',
-                        padding: '0',
-                    },
                     event: {
                         click: o.action.save
                     },
@@ -123,17 +120,6 @@
                     class: '__popup-btn __popup-refresh',
                 },
                 text: '↻',
-                style: {
-                    border: '1px solid #d1d5db',
-                    background: '#ffffff',
-                    borderRadius: '8px',
-                    width: '28px',
-                    height: '28px',
-                    cursor: 'pointer',
-                    fontSize: '16px',
-                    lineHeight: '1',
-                    padding: '0',
-                },
             });
 
             fn.element.create({
@@ -145,17 +131,6 @@
                     class: '__popup-btn __popup-close',
                 },
                 text: '✕',
-                style: {
-                    border: '1px solid #d1d5db',
-                    background: '#ffffff',
-                    borderRadius: '8px',
-                    width: '28px',
-                    height: '28px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    lineHeight: '1',
-                    padding: '0',
-                },
                 event: {
                     click: function() {
                         var popupArray = fn.component.data['popup'];
@@ -165,7 +140,10 @@
                                 popupArray.splice(index, 1);
                             }
                         }
-                        popup.remove();
+                        popup.classList.add('__popup--leave');
+                        setTimeout(function() {
+                            popup.remove();
+                        }, 200);
                     }
                 },
             });
@@ -176,19 +154,14 @@
                 attribute: {
                     class: '__popup-content',
                 },
-                style: {
-                    padding: '16px',
-                    backgroundColor: '#ffffff',
-                    minHeight: '120px',
-                },
             });
 
             $(popup).draggable({
                 handle: header,
             });
 
-            popup.addEventListener('click', function(e) {
-                popup.parentElement.appendChild(popup);
+            popup.addEventListener('mousedown', function() {
+                popup.style.zIndex = ++popupZIndex;
             }, true);
 
             popup.header = header;
@@ -209,10 +182,6 @@
                 attribute: {
                     class: '__form',
                 },
-                style: {
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                },
             });
 
             el._inputs = {};
@@ -232,14 +201,6 @@
                         class: '__form-label',
                     },
                     text: column.label || column.name,
-                    style: {
-                        padding: '6px 8px',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        color: '#374151',
-                        whiteSpace: 'nowrap',
-                        verticalAlign: 'middle',
-                    },
                     parent: row,
                 });
 
@@ -247,10 +208,6 @@
                     tagName: 'td',
                     attribute: {
                         class: '__form-value',
-                    },
-                    style: {
-                        padding: '6px 8px',
-                        width: '100%',
                     },
                     parent: row,
                 });
@@ -264,11 +221,6 @@
                     },
                     style: {
                         width: column.width || '100%',
-                        boxSizing: 'border-box',
-                        padding: '4px 6px',
-                        fontSize: '13px',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '6px',
                     },
                     parent: valueCell,
                 });
@@ -310,10 +262,6 @@
                 attribute: {
                     class: '__list',
                 },
-                style: {
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                },
             });
 
             if (o.columns.length) {
@@ -337,13 +285,6 @@
                         text: column.label || column.name,
                         style: {
                             width: column.width || 'auto',
-                            padding: '6px 8px',
-                            fontSize: '12px',
-                            fontWeight: '700',
-                            textAlign: 'left',
-                            color: '#374151',
-                            borderBottom: '2px solid #e5e7eb',
-                            whiteSpace: 'nowrap',
                         },
                         parent: headRow,
                     });
@@ -356,17 +297,15 @@
             });
 
             o.datas.forEach(function(data) {
+                var clickable = typeof data.action === 'function';
                 var row = fn.element.create({
                     tagName: 'tr',
                     attribute: {
-                        class: '__list-row',
-                    },
-                    style: {
-                        cursor: typeof data.action === 'function' ? 'pointer' : 'default',
+                        class: clickable ? '__list-row __list-row--clickable' : '__list-row',
                     },
                     event: {
                         click: function() {
-                            if (typeof data.action === 'function') {
+                            if (clickable) {
                                 data.action(data);
                             }
                         },
@@ -383,12 +322,6 @@
                             class: '__list-cell',
                         },
                         text: data[column.name] !== undefined ? data[column.name] : '',
-                        style: {
-                            padding: '6px 8px',
-                            fontSize: '13px',
-                            color: '#1f2937',
-                            borderBottom: '1px solid #f1f5f9',
-                        },
                         parent: row,
                     });
                 });
@@ -406,28 +339,21 @@
                 attribute: {
                     class: '__menu',
                 },
-                style: {
-
-                },
             });
             if (o.datas && Array.isArray(o.datas)) {
                 o.datas.forEach(function(data) {
-                    var item = fn.element.create({
+                    fn.element.create({
+                        parent: el,
                         tagName: 'div',
                         attribute: {
                             class: '__menu-item',
                         },
                         text: data.name,
-                        style: {
-                            padding: '5px 10px',
-                            cursor: 'pointer',
-                        },
                         event: {
                             click: data.action
                         },
                         data: data,
                     });
-                    el.appendChild(item);
                 });
             }
             return el;
