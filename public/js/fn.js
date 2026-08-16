@@ -3,6 +3,7 @@
 
     fn.localStorage = {};
     fn.element = {};
+    fn.data = {};
     fn.component = {};
     fn.component.data = {};
     fn.component.layout = {};
@@ -16,24 +17,25 @@
             options.body = JSON.stringify(o.data || {});
         }
 
-        try {
-            var response = await fetch(o.url, options);
-            var result = await response.json();
-            if (!response.ok) {
-                if (o.error) {
-                    o.error(result, response.status);
-                }
-                return;
-            }
-            if (o.success) {
-                o.success(result);
-            }
-            return result;
-        } catch (err) {
-            if (o.error) {
-                o.error(err);
-            }
+        var response = await fetch(o.url, options);
+        var result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.error || response.statusText);
         }
+        return result;
+    };
+
+    // /api/:resourceKey 제네릭 엔트리 CRUD용 클라이언트
+    fn.data.select = function (o = {}) {
+        return fn.ajax({ url: '/api/' + o.resourceKey, method: 'GET' });
+    };
+
+    fn.data.insert = function (o = {}) {
+        return fn.ajax({ url: '/api/' + o.resourceKey, method: 'POST', data: o.data });
+    };
+
+    fn.data.update = function (o = {}) {
+        return fn.ajax({ url: '/api/' + o.resourceKey + '/' + o.id, method: 'PUT', data: o.data });
     };
 
     fn.localStorage.get = function(o = {}) {

@@ -15,6 +15,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   ```
 - The original per-resource typed-column tables (`memo`, `bookmark`) were migrated into `memo_entry`/`bookmark_entry` and dropped — the DB only has `resource`, `memo_entry`, `bookmark_entry` now. `sql/001_create_memo.sql`/`002_create_bookmark.sql` are kept as historical record of that earlier design, not as tables to recreate.
 
+## Terminology
+
+These four terms are used precisely and distinctly — don't use them interchangeably:
+
+- **Screen** — the popup a DevTool menu item opens (a list + a detail/form). A pure frontend concept; not a DB table.
+- **Resource** — metadata *describing* a screen: one row in the `resource` table (`name`, `resource_key`, `fields`). `GET /api/resource` returns these.
+- **Field** — one attribute definition inside a resource's `fields` array (e.g. memo's `content`). Not a physical DB column.
+- **Entry** — one actual data record belonging to a resource (a specific memo, a specific bookmark). Lives in `{resource_key}_entry`, served by `GET/POST/PUT /api/:resourceKey`.
+
+This is why the frontend has two separate client helpers: `fn.ajax` (generic HTTP) and `fn.data.select/insert/update` (entry CRUD specifically) — it's named `fn.data`, not `fn.resource`, because it operates on entries; "resource" is reserved for the definition/metadata layer.
+
 ## Architecture
 
 **Server (`server.js`)** is a thin Express bootstrap: middleware, the `/api/db/health` route, mounting `routes/resource.js` at `/api`, then static file serving (`express.static(viewsDir)` then `express.static(publicDir)` — `.html` lives in `views/`, everything else — CSS/JS — in `public/`), then a 404 handler. `express.json()` handles body parsing. Route logic that isn't a one-off lives under `routes/`, not in `server.js` itself.
@@ -29,7 +40,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Frontend** (`views/index.html` + `public/js/` + `public/css/fn.css`) is a hand-rolled, build-step-free micro-framework called `fn`, loaded as three `<script>` tags **in this order** — order matters, since each file uses globals the previous one defines:
 
-1. `fn.js` — core primitives: `fn.element.create` (the one function used to build/configure every DOM node: `tagName`, `attribute`, `style`, `event`, `text`/`html`, `parent`, `complete`), `fn.element.draggable` (Pointer Events-based dragging — no jQuery anywhere in this project), `fn.ajax` (thin `fetch` wrapper: GET/HEAD get no body, other methods send JSON), and the `fn.component.create` / `fn.component.layout.set` / `.get` named-layout registry.
+1. `fn.js` — core primitives: `fn.element.create` (the one function used to build/configure every DOM node: `tagName`, `attribute`, `style`, `event`, `text`/`html`, `parent`, `complete`), `fn.element.draggable` (Pointer Events-based dragging — no jQuery anywhere in this project), `fn.ajax` (thin `fetch` wrapper: GET/HEAD get no body, other methods send JSON; throws on a non-OK response instead of taking success/error callbacks), `fn.data.select`/`.insert`/`.update` (the entry-CRUD client, built on `fn.ajax` — see Terminology above for why it's `data` and not `resource`), and the `fn.component.create` / `fn.component.layout.set` / `.get` named-layout registry.
 2. `fn.layout.js` — registers the actual components via `fn.component.layout.set({ name, value: function(o) {...} })`: `popup`, `popup-theme-btn`/`popup-edit-btn`/`popup-save-btn`/`popup-refresh-btn`/`popup-close-btn` (individual header buttons, composed by `popup-actions`), `form`, `list`, `menu`. `list`/`form` accept the raw `resource.fields` shape directly and internally skip any column missing `.list`/`.form` — callers never pre-filter columns themselves. Also owns dark/light theme state (`data-fn-theme` attribute on `<html>`, persisted via `fn.localStorage`).
 3. `fn.devtool.js` — the actual application: `fn.devtool.toggle()` opens the DevTool popup, then fetches `GET /api/resource` and builds the menu from the result. `openResource(config)` is the one generic function that drives every menu item's list/detail/save flow against `/api/{config.resource_key}` — there's no per-resource code here, so adding a menu item is a DB change (a `resource` row + entry table), not a code change. A `DOMContentLoaded` handler boots the floating gear button that calls `fn.devtool.toggle()`.
 

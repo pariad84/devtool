@@ -1,7 +1,7 @@
 // ====== DevTool 관련 ======
 fn.devtool = {
     isOpen: false,
-    toggle: function() {
+    toggle: async function() {
         this.isOpen = !this.isOpen;
         console.log('DevTool ' + (this.isOpen ? '열림' : '닫힘'));
 
@@ -30,27 +30,23 @@ fn.devtool = {
 
             var resourcePopup;
 
-            function loadList(container) {
-                fn.ajax({
-                    url: '/api/' + config.resource_key,
-                    method: 'GET',
-                    success: function(response) {
-                        var rows = (response.rows || []).map(function(row) {
-                            row.action = openDetail;
-                            return row;
-                        });
-                        container.innerHTML = '';
-                        fn.component.create({
-                            name: 'list',
-                            parent: container,
-                            columns: config.fields,
-                            datas: rows,
-                        });
-                    },
-                    error: function(err) {
-                        console.error(config.name + ' 목록 조회 실패:', err);
-                    }
-                });
+            async function loadList(container) {
+                try {
+                    var response = await fn.data.select({ resourceKey: config.resource_key });
+                    var rows = (response.rows || []).map(function(row) {
+                        row.action = openDetail;
+                        return row;
+                    });
+                    container.innerHTML = '';
+                    fn.component.create({
+                        name: 'list',
+                        parent: container,
+                        columns: config.fields,
+                        datas: rows,
+                    });
+                } catch (err) {
+                    console.error(config.name + ' 목록 조회 실패:', err);
+                }
             }
 
             function openDetail(data) {
@@ -64,20 +60,19 @@ fn.devtool = {
                     parent: document.body,
                     caller: resourcePopup,
                     action: {
-                        save: function() {
-                            fn.ajax({
-                                url: isNew ? ('/api/' + config.resource_key) : ('/api/' + config.resource_key + '/' + data.id),
-                                method: isNew ? 'POST' : 'PUT',
-                                data: form.getData(),
-                                success: function() {
-                                    detailPopup.classList.add('__popup--leave');
-                                    setTimeout(function() { detailPopup.remove(); }, 200);
-                                    loadList(resourcePopup.content);
-                                },
-                                error: function(err) {
-                                    console.error(config.name + ' 저장 실패:', err);
+                        save: async function() {
+                            try {
+                                if (isNew) {
+                                    await fn.data.insert({ resourceKey: config.resource_key, data: form.getData() });
+                                } else {
+                                    await fn.data.update({ resourceKey: config.resource_key, id: data.id, data: form.getData() });
                                 }
-                            });
+                                detailPopup.classList.add('__popup--leave');
+                                setTimeout(function() { detailPopup.remove(); }, 200);
+                                loadList(resourcePopup.content);
+                            } catch (err) {
+                                console.error(config.name + ' 저장 실패:', err);
+                            }
                         }
                     },
                     complete: function(o) {
@@ -105,24 +100,20 @@ fn.devtool = {
             });
         }
 
-        fn.ajax({
-            url: '/api/resource',
-            method: 'GET',
-            success: function(response) {
-                var resources = response.rows || [];
-                fn.component.create({
-                    name: 'menu',
-                    caller: popup,
-                    datas: resources.map(function(config) {
-                        return { name: config.name, action: function() { openResource(config); } };
-                    }),
-                    parent: popup.content,
-                });
-            },
-            error: function(err) {
-                console.error('리소스 목록 조회 실패:', err);
-            }
-        });
+        try {
+            var response = await fn.ajax({ url: '/api/resource', method: 'GET' });
+            var resources = response.rows || [];
+            fn.component.create({
+                name: 'menu',
+                caller: popup,
+                datas: resources.map(function(config) {
+                    return { name: config.name, action: function() { openResource(config); } };
+                }),
+                parent: popup.content,
+            });
+        } catch (err) {
+            console.error('리소스 목록 조회 실패:', err);
+        }
 
         console.log(popup);
     }
