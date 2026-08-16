@@ -44,6 +44,23 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // 메모 목록 조회
+  if (pathname === '/api/memo' && req.method === 'GET') {
+    pool.query('SELECT id, name, status, content, created_at, updated_at FROM memo ORDER BY id')
+      .then((result) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.end(JSON.stringify({ ok: true, rows: result.rows }));
+      })
+      .catch((err) => {
+        console.error('메모 목록 조회 실패:', err);
+        res.statusCode = 500;
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.end(JSON.stringify({ ok: false, error: err.message }));
+      });
+    return;
+  }
+
   // 루트 경로는 index.html로 처리
   if (pathname === '/') {
     pathname = '/index.html';

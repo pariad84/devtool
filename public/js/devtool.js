@@ -30,37 +30,49 @@ fn.devtool = {
                             var memoPopup = o.popup;
 
                             var memoColumns = [
-                                { name: 'ID', label: 'ID', width: '60px', dataType: 'number', inputType: 'text' },
-                                { name: 'Name', label: 'Name', width: '200px', dataType: 'string', inputType: 'text' },
-                                { name: 'Status', label: 'Status', width: '100px', dataType: 'string', inputType: 'text' }
+                                { name: 'id', label: 'ID', width: '60px', dataType: 'number', inputType: 'text' },
+                                { name: 'name', label: 'Name', width: '200px', dataType: 'string', inputType: 'text' },
+                                { name: 'status', label: 'Status', width: '100px', dataType: 'string', inputType: 'text' }
                             ];
+                            var memoDetailColumns = memoColumns.concat([
+                                { name: 'content', label: 'Content', width: '100%', dataType: 'string', inputType: 'text' }
+                            ]);
 
                             function openMemoDetail(data) {
                                 fn.component.create({
                                     name: 'popup',
-                                    title: 'Memo 상세 (' + data.Name + ')',
+                                    title: 'Memo 상세 (' + data.name + ')',
                                     parent: document.body,
                                     caller: memoPopup,
                                     complete: function(o) {
                                         fn.component.create({
                                             name: 'form',
                                             parent: o.popup.content,
-                                            columns: memoColumns,
+                                            columns: memoDetailColumns,
                                             data: data,
                                         });
                                     }
                                 });
                             }
 
-                            var list = fn.component.create({
-                                name: 'list',
-                                parent: o.popup.content,
-                                columns: memoColumns,
-                                datas: [
-                                    { ID: 1, Name: 'List Item 1', Status: 'Active', action: openMemoDetail },
-                                    { ID: 2, Name: 'List Item 2', Status: 'Inactive', action: openMemoDetail },
-                                    { ID: 3, Name: 'List Item 3', Status: 'Active', action: openMemoDetail },
-                                ],
+                            fn.ajax({
+                                url: '/api/memo',
+                                method: 'GET',
+                                success: function(response) {
+                                    var rows = (response.rows || []).map(function(row) {
+                                        row.action = openMemoDetail;
+                                        return row;
+                                    });
+                                    fn.component.create({
+                                        name: 'list',
+                                        parent: memoPopup.content,
+                                        columns: memoColumns,
+                                        datas: rows,
+                                    });
+                                },
+                                error: function(xhr, status, error) {
+                                    console.error('메모 목록 조회 실패:', error);
+                                }
                             });
                         }
                     });

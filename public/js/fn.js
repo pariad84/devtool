@@ -13,7 +13,22 @@
     fn.component.layout.data = {};
     
     fn.ajax = async function (o = {}) {
-        
+        $.ajax({
+            url: o.url,
+            method: o.method || 'POST',
+            contentType: o.contentType || 'application/json; charset=UTF-8',
+            data: JSON.stringify(o.data || {}),
+            success: function(response) {
+                if (o.success) {
+                    o.success(response);
+                }
+            },
+            error: function(xhr, status, error) {
+                if (o.error) {
+                    o.error(xhr, status, error);
+                }
+            }
+        });
     };
 
     fn.localStorage.get = function(o = {}) {
