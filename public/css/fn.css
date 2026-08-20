@@ -285,6 +285,60 @@
     border-bottom: 1px solid var(--dt-divider);
 }
 
+.__db-config {
+    font-family: var(--dt-font);
+    padding: var(--dt-space-2);
+    max-width: 360px;
+}
+
+.__db-config-desc {
+    margin: 0 0 var(--dt-space-3);
+    font-size: 13px;
+    color: var(--dt-text-muted);
+}
+
+.__db-config-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--dt-space-2);
+}
+
+.__db-config-submit {
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #ffffff;
+    background: var(--dt-accent-gradient);
+    border: none;
+    border-radius: var(--dt-radius-sm);
+    cursor: pointer;
+    transition: transform var(--dt-transition), box-shadow var(--dt-transition);
+}
+
+.__db-config-submit:hover {
+    box-shadow: var(--dt-shadow-1);
+    transform: translateY(-1px);
+}
+
+.__db-config-submit:active {
+    transform: scale(0.96);
+}
+
+.__db-config-status {
+    margin-top: var(--dt-space-2);
+    font-size: 12.5px;
+    min-height: 16px;
+    color: var(--dt-text-muted);
+}
+
+.__db-config-status--ok {
+    color: var(--dt-accent-strong);
+}
+
+.__db-config-status--error {
+    color: var(--dt-danger);
+}
+
 .__menu {
     font-family: var(--dt-font);
     padding: var(--dt-space-2);

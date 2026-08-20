@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const pool = require('./db');
 const resourceRoutes = require('./routes/resource');
+const configRoutes = require('./routes/config');
 
 const hostname = '127.0.0.1';
 const port = 3000;
@@ -23,6 +24,7 @@ app.get('/api/db/health', async (req, res) => {
   }
 });
 
+app.use('/api/db', configRoutes);
 app.use('/api', resourceRoutes);
 
 // 정적 파일: HTML은 views/, 그 외(CSS/JS 등)는 public/

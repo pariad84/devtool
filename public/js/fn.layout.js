@@ -483,6 +483,142 @@
     });
 
     fn.component.layout.set({
+        name: 'db-config-form',
+        value: function(o = {}) {
+            var wrap = fn.element.create({
+                tagName: 'div',
+                attribute: {
+                    class: '__db-config',
+                },
+            });
+
+            fn.element.create({
+                tagName: 'p',
+                attribute: {
+                    class: '__db-config-desc',
+                },
+                text: 'DB에 연결할 수 없습니다. 접속 정보를 입력해주세요.',
+                parent: wrap,
+            });
+
+            var table = fn.element.create({
+                tagName: 'table',
+                attribute: {
+                    class: '__form',
+                },
+                parent: wrap,
+            });
+
+            var fields = [
+                { name: 'host', label: 'Host', type: 'text', value: 'localhost' },
+                { name: 'port', label: 'Port', type: 'number', value: '5432' },
+                { name: 'database', label: 'Database', type: 'text', value: '' },
+                { name: 'user', label: 'User', type: 'text', value: '' },
+                { name: 'password', label: 'Password', type: 'password', value: '' },
+            ];
+
+            var inputs = {};
+            fields.forEach(function(field) {
+                var row = fn.element.create({
+                    tagName: 'tr',
+                    attribute: { class: '__form-row' },
+                    parent: table,
+                });
+                fn.element.create({
+                    tagName: 'td',
+                    attribute: { class: '__form-label' },
+                    text: field.label,
+                    parent: row,
+                });
+                var valueCell = fn.element.create({
+                    tagName: 'td',
+                    attribute: { class: '__form-value' },
+                    parent: row,
+                });
+                var input = fn.element.create({
+                    tagName: 'input',
+                    attribute: { type: field.type, class: '__form-input' },
+                    style: { width: '100%' },
+                    parent: valueCell,
+                });
+                input.value = field.value;
+                inputs[field.name] = input;
+            });
+
+            var sslRow = fn.element.create({
+                tagName: 'tr',
+                attribute: { class: '__form-row' },
+                parent: table,
+            });
+            fn.element.create({
+                tagName: 'td',
+                attribute: { class: '__form-label' },
+                text: 'SSL',
+                parent: sslRow,
+            });
+            var sslCell = fn.element.create({
+                tagName: 'td',
+                attribute: { class: '__form-value' },
+                parent: sslRow,
+            });
+            var sslInput = fn.element.create({
+                tagName: 'input',
+                attribute: { type: 'checkbox' },
+                parent: sslCell,
+            });
+
+            var status = fn.element.create({
+                tagName: 'div',
+                attribute: { class: '__db-config-status' },
+                parent: wrap,
+            });
+
+            var actions = fn.element.create({
+                tagName: 'div',
+                attribute: { class: '__db-config-actions' },
+                parent: wrap,
+            });
+
+            fn.element.create({
+                tagName: 'button',
+                attribute: { type: 'button', class: '__db-config-submit' },
+                text: '연결 테스트 & 저장',
+                parent: actions,
+                event: {
+                    click: async function() {
+                        status.textContent = '연결 확인 중...';
+                        status.className = '__db-config-status';
+                        try {
+                            await fn.ajax({
+                                url: '/api/db/config',
+                                method: 'POST',
+                                data: {
+                                    host: inputs.host.value,
+                                    port: Number(inputs.port.value),
+                                    database: inputs.database.value,
+                                    user: inputs.user.value,
+                                    password: inputs.password.value,
+                                    ssl: sslInput.checked,
+                                },
+                            });
+                            status.textContent = '연결 성공! 저장되었습니다.';
+                            status.className = '__db-config-status __db-config-status--ok';
+                            if (o.onSuccess) {
+                                o.onSuccess();
+                            }
+                        } catch (err) {
+                            status.textContent = '연결 실패: ' + err.message;
+                            status.className = '__db-config-status __db-config-status--error';
+                        }
+                    },
+                },
+            });
+
+            return wrap;
+        }
+    });
+
+    fn.component.layout.set({
         name: 'menu',
         value: function(o = {}) {
             var el = fn.element.create({
