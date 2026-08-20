@@ -100,20 +100,32 @@ fn.devtool = {
             });
         }
 
-        try {
-            var response = await fn.ajax({ url: '/api/resource', method: 'GET' });
-            var resources = response.rows || [];
-            fn.component.create({
-                name: 'menu',
-                caller: popup,
-                datas: resources.map(function(config) {
-                    return { name: config.name, action: function() { openResource(config); } };
-                }),
-                parent: popup.content,
-            });
-        } catch (err) {
-            console.error('리소스 목록 조회 실패:', err);
+        // DB 연결이 안 돼서 리소스 목록 조회가 실패하면, 메뉴 대신 접속 정보 입력 폼을 보여주고
+        // 저장에 성공하면 다시 이 함수를 호출해 메뉴 로딩을 재시도한다.
+        async function loadMenu() {
+            popup.content.innerHTML = '';
+            try {
+                var response = await fn.ajax({ url: '/api/resource', method: 'GET' });
+                var resources = response.rows || [];
+                fn.component.create({
+                    name: 'menu',
+                    caller: popup,
+                    datas: resources.map(function(config) {
+                        return { name: config.name, action: function() { openResource(config); } };
+                    }),
+                    parent: popup.content,
+                });
+            } catch (err) {
+                console.error('리소스 목록 조회 실패:', err);
+                fn.component.create({
+                    name: 'db-config-form',
+                    parent: popup.content,
+                    onSuccess: loadMenu,
+                });
+            }
         }
+
+        await loadMenu();
     }
 };
 
